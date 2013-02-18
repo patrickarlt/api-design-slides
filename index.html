@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <link href='style.css' rel='stylesheet' type='text/css' />
+    <script src='big.js'></script>
+    <script src='showdown.js'></script>
+  </head>
+  <body>
+# Why do we need to care about API design
+* We need to feel confident that we are doing all we<br> can to help developers build great apps.
+* Lets developers build apps insteed of <br>reading documentation or learning terminology
+
+# Good API design makes things better for everyone.
+
+# Developers in ArcGIS organizations like that...
+* Our APIs are consistant and when we<br> release new feature there is nothing to relearn
+* All our APIs behave in a similar manner<br> and share similar defaults and concepts
+
+# "Application" developers like that...
+* Our APIs have much more functionality <br> then similar tools from Goggle or MapQuest<br> without adding to much complexity
+
+# Developers inside Esri like that...
+* new features can be accessed quickly and easily
+* New staff can be onboarded faster because APIs are consistant
+
+
+# Questions we need to ask...
+* How to our APIs compare to our competitors APIs?
+* Are our APIs accessible and easy to understand?
+* How easy is it to find what you need in an API or SDK?
+* Are we reavealing the complexity our<br> APIs over time insteed of all at once?
+
+# Current API and SDK review
+<br>
+Things that **WILL** throw off new developers in the system
+
+## Service URLs
+<br>
+ArcGIS services like directions and geocoding exist at differnt URLs.<br>
+This is a strength of the platform but it makes life harder for developers.
+
+Developers should not have to worry about what the correct URL is.
+
+## Proposal
+* `new esri.tasks.RouteTask()` - Use the default hosted service.
+* `new esri.tasks.RouteTask(url)` - Use the service hosted at this url.
+
+## Parameter Names
+* Parameter names are not consistantly capitalized the same way
+* Mismatches between what SDK and API parameter names
+* Confusing parameter names that do not describe what they do
+* Inflexible parameter names that describe only one use case
+* Default options often do not make sense
+
+### Example #1 - Capitalization
+<br>
+Most parameter names in the API are camelcase. Except for<br> geocoding where some but not all parameters are uppercase.
+<br>
+`Address`, `Neighborhood`, `City`, `searchExtent`, `location`.
+
+### Example #2 - Capitalization
+<br>
+Parameter names for the Sycnronous Service Area request are<br> camalCase but in the Asyncronous Service Area are Captialized.
+
+### Example #2 - Inconsistant Naming
+<br>
+To geocode a single line address or search with <br> `esri.tasks.Locator` the API parameter is called `text`.
+<br>
+In the Javascript SDK it is called `"Single Line Input"`
+
+### Example #3 - Confusing Names
+<br>
+In the drive time/service area API you define the times <br> you want to calculate by setting the `defaultBreaks` parameter.
+
+The parameter name does not describe<br> what the it does and will confuse developers.
+
+This also accepts a string of numbers "5 60" but <br>why not an array like [5, 60] which is easier to construct.
+
+Why not call this parameter `time`? Which more accuratly <br>descirbes what it does in the context of calculating a driveTime
+
+### Example #4 - Inflexible Names
+<br>
+In the nearest place/closest facilities API <br>there are parameters for `incidents` and `facilities`.
+
+Why do I do if I want to get directions to the nearest bar?
+<br>
+Do I put my location as a facility and the bars as incidents?
+
+This feels like it was designed only to handle <br> very specific use cases. Routing police cars <br>to crimes and ambulences to hospitals
+
+In reality we have no idea what developers will build
+
+Why not name these `origins` and `destinations`?
+
+### Example #5 - Sane Defaults
+<br>
+By default the directions API returns driving directions with requests.<br>By default the Javascript SDK sets this to `false`.
+
+## Response Consistancy
+* Geocoding with single line, multi line <br> and reverse geocoding do not return similar results.
+* Some areas in responses are completly empty
+
+### Example #1 - Geocoding
+
+Geocoding the single line "420 SW Taylor St Portland Or"<br> returns and array of `locations`
+
+Geocoding the multiline address "420 SW Taylor St Portland Or"<br> returns and array of `canidates`
+
+Why are these different. Why you <br>call this repsonse parameter `results`?
+
+Reverse geocoding returns a single `location` and <br> components of an address but no full address.
+
+### Example #2 - Directions Responses
+<br>
+`response.routeResults[0].directions.strings` <br>is an array of empty strings. But It seems like a logical<br> place to store all the text directions
+
+## Data Quality
+* Geocoder search results are not complete
+* Geocoder cannot autocomplete results
+* Maps are over/under labeled
+
+### Example #1 - Place Search
+<br>
+When I ask for `"coffee shops portland or"` I get mostly Starbucks.
+
+### Example #2 - Geocoder Autocomplete
+<br>
+The Geocoder cannot be used to do any sort <br>of auto competetion. `Tex` will not auto-complete to `Texas`.
+
+This makes it impossible to build a good autocompleting search.
+
+### Example #3
+<br>
+Map labeling is really inconsistant...
+
+!["Over Labeled"](img/over-labeled.jpg "background")
+
+!["Under Labeled"](img/under-labeled.jpg "background")
+
+# Things have been improving
+
+## Javascipt API Basemaps
+
+New `basemap` parameter in `esri.Map` is awesome.
+
+## Spatial Reference Abstraction
+
+`esri.Map` and `esri.geometry.Point` no longer require spatialReference
+
+Most methods will automatically convert<br> between Geographic and Web Mercator
+
+## Geocoder Widget
+<br>
+This is a really good UI component that sovles a problem.
+
+But it is limted by the capabilities of the Geocoder.
+
+# API Design Principles
+
+## Consistancy
+<br>
+Good APIs are consistant. They do that same thing all the time.
+
+## Clarity
+<br>
+APIs and SDKs should be clear enough developers <br>do not have to refer to documentation all the time.
+
+## Reduce Work
+<br>
+* Leverage our network of services to help solve problems
+* Identify
+
+What if we could geocode and get directions at the same time?
+
+What if we could find teh nearest place in a feature service given a location?
+
+What if we could make a feautre service of the 5 minute drive time from all features in another service?
+
+## Free of "gotchas"
+
+## Sensible Defaults
+<br>
+All services should try to make sure that developers<br> never have to change 80% of the defulat options.
+
+## Require the least possible knowledge
+Developers should not have to know or <br>learn GIS terms when using our tools.
+
+We should not make develoeprs learn <br>another library or service to use our tools.
+
+## Organize around the 80%
+<br>
+We should organize documentation around <br>the 80% of tasks taht developers commonly want to preform.
+
+## Provide different levels of SDK integrations
+<br>
+We should not force developers to one particular path or toolset
+
+### Basic
+<br>
+Solves the problem at eh lowest possible level
+
+`esri.request`
+
+### or
+<br>
+A small API wrapper that handles authentication
+
+### Intermediate
+<br>
+`esri.Geocode.address()`
+
+* Has knowlage of the Geocoder Service URL
+* Turns JSON response into SDK objects
+
+Lets developers interact with the service <br>easily but gives them alot of control
+
+### Advanced
+<br>
+`esri.Geocode.Widget()`
+
+A full fledged UI component for Geocoding.
+
+Handles building a UI and all <br>accociated events and behaviors.
+Saves developers time so they don't <br>have to build the same UI over again
+
+  </body>
+  <script>
+  var converter = new Showdown.converter();
+  var slides = document.body.innerHTML.split("\n\n");
+  document.body.innerHTML = "";
+  for(var i=0; i<slides.length-1; i++) {
+    console.log(i);
+    document.body.innerHTML += "<div>" + converter.makeHtml(slides[i]) + "</div>";
+  }
+  </script>
+</html>
